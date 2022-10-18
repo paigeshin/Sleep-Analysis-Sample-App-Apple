@@ -56,8 +56,8 @@ struct ContentView: View {
         //Find the difference between current time and start time.
         var elapsedTime: TimeInterval = currentTime - startDate.timeIntervalSinceReferenceDate
         
-       // print(elapsedTime)
-      //  print(Int(elapsedTime))
+        // print(elapsedTime)
+        //  print(Int(elapsedTime))
         
         //calculate the minutes in elapsed time.
         let minutes = UInt8(elapsedTime / 60.0)
@@ -79,7 +79,7 @@ struct ContentView: View {
         //concatenate minuets, seconds and milliseconds as assign it to the UILabel
         self.timeText = "\(strMinutes):\(strSeconds):\(strFraction)"
     }
-
+    
     func finish() {
         self.saveSleepAnalysis()
         self.retrieveSleepAnalysis()
@@ -108,48 +108,84 @@ struct ContentView: View {
         if let sleepType = HKObjectType.categoryType(forIdentifier: HKCategoryTypeIdentifier.sleepAnalysis) {
             
             
-            for sleepValue in HKCategoryValueSleepAnalysis.allAsleepValues {
-                
-                print("Sleep Value: \(sleepValue)")
-                
-                switch sleepValue {
-                case HKCategoryValueSleepAnalysis.asleepCore:
-                    print("Sleep Core")
-                case HKCategoryValueSleepAnalysis.inBed:
-                    print("In Bed")
-                case HKCategoryValueSleepAnalysis.asleepDeep:
-                    print("Asleep Deep")
-                case HKCategoryValueSleepAnalysis.asleepREM:
-                    print("REM")
-                case HKCategoryValueSleepAnalysis.awake:
-                    print("Awake")
-                case HKCategoryValueSleepAnalysis.asleepUnspecified:
-                    print("Asleep Unspecified")
-                @unknown default:
-                    print("None")
+            if #available(iOS 16.0, *) {
+                for sleepValue in HKCategoryValueSleepAnalysis.allAsleepValues {
+                    
+                    print("Sleep Value: \(sleepValue)")
+                    
+                    switch sleepValue {
+                    case HKCategoryValueSleepAnalysis.asleepCore:
+                        print("Sleep Core")
+                    case HKCategoryValueSleepAnalysis.inBed:
+                        print("In Bed")
+                    case HKCategoryValueSleepAnalysis.asleepDeep:
+                        print("Asleep Deep")
+                    case HKCategoryValueSleepAnalysis.asleepREM:
+                        print("REM")
+                    case HKCategoryValueSleepAnalysis.awake:
+                        print("Awake")
+                    case HKCategoryValueSleepAnalysis.asleepUnspecified:
+                        print("Asleep Unspecified")
+                    @unknown default:
+                        print("None")
+                    }
+                    
+                    
+                    // we create our new object we want to push in Health app
+                    let object = HKCategorySample(type:sleepType, value: sleepValue.rawValue, start: self.startDate, end: Date())
+                    
+                    // at the end, we save it
+                    healthStore.save(object, withCompletion: { (success, error) -> Void in
+                        
+                        if error != nil {
+                            // something happened
+                            return
+                        }
+                        
+                        if success {
+                            print("My new data was saved in HealthKit")
+                            
+                        } else {
+                            // something happened again
+                        }
+                        
+                    })
                 }
                 
                 
-                // we create our new object we want to push in Health app
-                let object = HKCategorySample(type:sleepType, value: sleepValue.rawValue, start: self.startDate, end: Date())
+            } else {
                 
-                // at the end, we save it
-                healthStore.save(object, withCompletion: { (success, error) -> Void in
+                let allAsleepValues: Set<HKCategoryValueSleepAnalysis> = [
+                    HKCategoryValueSleepAnalysis.inBed,
+                    HKCategoryValueSleepAnalysis.awake,
+                ]
+                
+                for sleepValue in allAsleepValues {
+                    // we create our new object we want to push in Health app
+                    let object = HKCategorySample(type:sleepType, value: sleepValue.rawValue, start: self.startDate, end: Date())
                     
-                    if error != nil {
-                        // something happened
-                        return
-                    }
-                    
-                    if success {
-                        print("My new data was saved in HealthKit")
+                    // at the end, we save it
+                    healthStore.save(object, withCompletion: { (success, error) -> Void in
                         
-                    } else {
-                        // something happened again
-                    }
-                    
-                })
+                        if error != nil {
+                            // something happened
+                            return
+                        }
+                        
+                        if success {
+                            print("My new data was saved in HealthKit")
+                            
+                        } else {
+                            // something happened again
+                        }
+                        
+                    })
+                }
+                
+     
+                
             }
+            
         }
         
     }
