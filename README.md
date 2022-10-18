@@ -1,6 +1,5 @@
-# Sleep-Analysis-Sample-App-Apple
-
 ```swift
+
 //
 //  ContentView.swift
 //  SleepAnalysisSampleApp
@@ -26,6 +25,7 @@ struct ContentView: View {
                 .padding(.bottom)
             
             Button("Start") {
+                self.timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
                 self.started = true
                 self.startDate = Date()
             }
@@ -109,6 +109,27 @@ struct ContentView: View {
             
             
             for sleepValue in HKCategoryValueSleepAnalysis.allAsleepValues {
+                
+                print("Sleep Value: \(sleepValue)")
+                
+                switch sleepValue {
+                case HKCategoryValueSleepAnalysis.asleepCore:
+                    print("Sleep Core")
+                case HKCategoryValueSleepAnalysis.inBed:
+                    print("In Bed")
+                case HKCategoryValueSleepAnalysis.asleepDeep:
+                    print("Asleep Deep")
+                case HKCategoryValueSleepAnalysis.asleepREM:
+                    print("REM")
+                case HKCategoryValueSleepAnalysis.awake:
+                    print("Awake")
+                case HKCategoryValueSleepAnalysis.asleepUnspecified:
+                    print("Asleep Unspecified")
+                @unknown default:
+                    print("None")
+                }
+                
+                
                 // we create our new object we want to push in Health app
                 let object = HKCategorySample(type:sleepType, value: sleepValue.rawValue, start: self.startDate, end: Date())
                 
@@ -176,5 +197,6 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
 
 ```
