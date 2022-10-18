@@ -1,12 +1,16 @@
 ```swift
 
-
 //
 //  ContentView.swift
 //  SleepAnalysisSampleApp
 //
 //  Created by paige shin on 2022/10/18.
 //
+
+/// https://benoitpasquier.com/sleep-healthkit/
+/// https://www.appsloveworld.com/swift/100/89/apple-healthkit-rem-deep-light-sleep-analysis
+/// https://www.wwdcnotes.com/notes/wwdc22/10005/
+/// https://developer.apple.com/videos/play/wwdc2022/10005
 
 import SwiftUI
 import HealthKit
@@ -18,10 +22,19 @@ struct ContentView: View {
     @State var timeText: String = ""
     @State var started: Bool = false
     @State var timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
+    @State var results: [String] = []
     
     var body: some View {
         VStack {
             
+            if results.count > 0 {
+                List {
+                    ForEach(results, id: \.self) { text in
+                        Text(text)
+                    }
+                }
+            }
+       
             Text(self.timeText)
                 .padding(.bottom)
             
@@ -159,6 +172,7 @@ struct ContentView: View {
                 let allAsleepValues: Set<HKCategoryValueSleepAnalysis> = [
                     HKCategoryValueSleepAnalysis.inBed,
                     HKCategoryValueSleepAnalysis.awake,
+                    HKCategoryValueSleepAnalysis.asleep,
                 ]
                 
                 for sleepValue in allAsleepValues {
@@ -217,6 +231,33 @@ struct ContentView: View {
                         if let sample = item as? HKCategorySample {
                             let value = (sample.value == HKCategoryValueSleepAnalysis.inBed.rawValue) ? "InBed" : "Asleep"
                             print("Healthkit sleep: \(sample.startDate) \(sample.endDate) - value: \(value)")
+                            if #available(iOS 16.0, *) {
+                                switch sample.value {
+                                case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
+                                    self.results.append("Sleep Core, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.inBed.rawValue:
+                                    self.results.append("In Bed, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
+                                    self.results.append("Asleep Deep, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
+                                    self.results.append("REM, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.awake.rawValue:
+                                    self.results.append("Awake, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
+                                    self.results.append("Asleep Unspecified, \(sample.startDate)")
+                                default: print("None")
+                                }
+                            } else {
+                                switch sample.value {
+                                case HKCategoryValueSleepAnalysis.inBed.rawValue:
+                                    self.results.append("In Bed, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.awake.rawValue:
+                                    self.results.append("Awake, \(sample.startDate)")
+                                case HKCategoryValueSleepAnalysis.asleep.rawValue:
+                                    self.results.append("Asleep, \(sample.startDate)")
+                                default: print("None")
+                                }
+                            }
                         }
                     }
                 }
@@ -234,7 +275,6 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
 
 
 ```
